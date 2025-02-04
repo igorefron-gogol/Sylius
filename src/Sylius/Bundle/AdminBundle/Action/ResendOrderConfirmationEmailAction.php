@@ -32,7 +32,7 @@ final class ResendOrderConfirmationEmailAction
 {
     public function __construct(
         private OrderRepositoryInterface $orderRepository,
-        private OrderEmailManagerInterface|ResendOrderConfirmationEmailDispatcherInterface $orderEmailManagerOrResendOrderConfirmationDispatcher,
+        private OrderEmailManagerInterface|ResendOrderConfirmationEmailDispatcherInterface $orderEmailManager,
         private CsrfTokenManagerInterface $csrfTokenManager,
         private RequestStack|SessionInterface $requestStackOrSession,
     ) {
@@ -47,7 +47,7 @@ final class ResendOrderConfirmationEmailAction
             );
         }
 
-        if ($this->orderEmailManagerOrResendOrderConfirmationDispatcher instanceof OrderEmailManagerInterface) {
+        if ($this->orderEmailManager instanceof OrderEmailManagerInterface) {
             trigger_deprecation(
                 'sylius/admin-bundle',
                 '1.13',
@@ -55,6 +55,13 @@ final class ResendOrderConfirmationEmailAction
                 OrderEmailManagerInterface::class,
                 self::class,
                 ResendOrderConfirmationEmailDispatcherInterface::class,
+            );
+
+            trigger_deprecation(
+                'sylius/admin-bundle',
+                '1.13',
+                'The argument name of %s is deprecated and will be renamed to $resendOrderConfirmationEmailDispatcher in Sylius 2.0.',
+                OrderEmailManagerInterface::class,
             );
         }
     }
@@ -87,10 +94,10 @@ final class ResendOrderConfirmationEmailAction
 
     private function sendConfirmationEmailOrDispatchResendOrderConfirmation(OrderInterface $order): void
     {
-        if ($this->orderEmailManagerOrResendOrderConfirmationDispatcher instanceof OrderEmailManagerInterface) {
-            $this->orderEmailManagerOrResendOrderConfirmationDispatcher->sendConfirmationEmail($order);
+        if ($this->orderEmailManager instanceof OrderEmailManagerInterface) {
+            $this->orderEmailManager->sendConfirmationEmail($order);
         } else {
-            $this->orderEmailManagerOrResendOrderConfirmationDispatcher->dispatch($order->getTokenValue());
+            $this->orderEmailManager->dispatch($order);
         }
     }
 }
